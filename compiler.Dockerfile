@@ -341,9 +341,22 @@ RUN set -xe; \
     && make \
     && make install
 
+# Install boost
+
+ENV BOOST_BUILD_DIR=${BUILD_DIR}/boost
+
+RUN set -xe; \
+    mkdir -p ${BOOST_BUILD_DIR}; \
+    curl -Ls https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz \
+    | tar xzC ${BOOST_BUILD_DIR} --strip-components=1
+
+WORKDIR  ${BOOST_BUILD_DIR}/
+
+RUN ./bootstrap.sh --prefix=${INSTALL_DIR} && ./b2 install --prefix=${INSTALL_DIR} || :
+
 # Install Poppler (https://gitlab.freedesktop.org/poppler/poppler/-/tags)
 
-ENV VERSION_POPPLER=21.04.0
+ENV VERSION_POPPLER=22.01.0
 ENV POPPLER_BUILD_DIR=${BUILD_DIR}/poppler
 ENV POPPLER_TEST_DIR=${BUILD_DIR}/poppler-test
 
