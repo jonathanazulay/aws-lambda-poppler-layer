@@ -1,4 +1,4 @@
-FROM amazonlinux:2018.03
+FROM amazonlinux:2022
 
 ENV SOURCE_DIR="/opt"
 ENV INSTALL_DIR="/opt"
@@ -20,7 +20,7 @@ RUN set -xe; \
     ${INSTALL_DIR}/share \
     ${INSTALL_DIR}/lib
 
-COPY --from=jeylabs/poppler/compiler:latest /lib64/libuuid.so.* ${INSTALL_DIR}/lib/
+COPY --from=jeylabs/poppler/compiler:latest /usr/lib64/libuuid.so.* ${INSTALL_DIR}/lib/
 COPY --from=jeylabs/poppler/compiler:latest ${SOURCE_DIR}/share/ /tmp/share
 COPY --from=jeylabs/poppler/compiler:latest ${SOURCE_DIR}/etc/ ${INSTALL_DIR}/etc/
 COPY --from=jeylabs/poppler/compiler:latest ${SOURCE_DIR}/bin/ ${INSTALL_DIR}/bin/

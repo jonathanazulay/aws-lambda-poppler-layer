@@ -1,4 +1,4 @@
-FROM amazonlinux:2018.03
+FROM amazonlinux:2022
 
 SHELL ["/bin/bash", "-c"]
 
@@ -7,7 +7,8 @@ ENV INSTALL_DIR="/opt"
 
 # Lock To Proper Release
 
-RUN sed -i 's/releasever=latest/releaserver=2018.03/' /etc/yum.conf
+# TODO: Is this needed?
+#RUN sed -i 's/releasever=latest/releaserver=latest/' /etc/yum.conf
 
 # Create All The Necessary Build Directories
 
@@ -28,7 +29,7 @@ WORKDIR /tmp
 RUN set -xe \
     && yum makecache \
     && yum groupinstall -y "Development Tools"  --setopt=group_package_types=mandatory,default \
-    && yum install -y libuuid-devel openssl-devel gcc72 gcc72-c++
+    && yum install -y libuuid-devel openssl-devel git-clang-format
 
 # Install CMake
 
@@ -342,21 +343,20 @@ RUN set -xe; \
     && make install
 
 # Install boost
+# ENV BOOST_BUILD_DIR=${BUILD_DIR}/boost
 
-ENV BOOST_BUILD_DIR=${BUILD_DIR}/boost
+# RUN set -xe; \
+#    mkdir -p ${BOOST_BUILD_DIR}; \
+#    curl -Ls https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz \
+#    | tar xzC ${BOOST_BUILD_DIR} --strip-components=1
 
-RUN set -xe; \
-    mkdir -p ${BOOST_BUILD_DIR}; \
-    curl -Ls https://boostorg.jfrog.io/artifactory/main/release/1.76.0/source/boost_1_76_0.tar.gz \
-    | tar xzC ${BOOST_BUILD_DIR} --strip-components=1
+#WORKDIR  ${BOOST_BUILD_DIR}/
 
-WORKDIR  ${BOOST_BUILD_DIR}/
-
-RUN ./bootstrap.sh --prefix=${INSTALL_DIR} && ./b2 install --prefix=${INSTALL_DIR} || :
+# RUN ./bootstrap.sh --prefix=${INSTALL_DIR} && ./b2 install --prefix=${INSTALL_DIR} || :
 
 # Install Poppler (https://gitlab.freedesktop.org/poppler/poppler/-/tags)
 
-ENV VERSION_POPPLER=22.01.0
+ENV VERSION_POPPLER=22.05.0
 ENV POPPLER_BUILD_DIR=${BUILD_DIR}/poppler
 ENV POPPLER_TEST_DIR=${BUILD_DIR}/poppler-test
 
@@ -376,6 +376,8 @@ RUN set -xe; \
     CPPFLAGS="-I${INSTALL_DIR}/include  -I/usr/include" \
     LDFLAGS="-L${INSTALL_DIR}/lib64 -L${INSTALL_DIR}/lib" \
     cmake .. \
+    # Disable boost to keep layer size low
+    -DENABLE_BOOST=OFF \
     -DCMAKE_BUILD_TYPE=Release \
     -DTESTDATADIR=${POPPLER_TEST_DIR} \
     -DENABLE_UNSTABLE_API_ABI_HEADERS=ON \
